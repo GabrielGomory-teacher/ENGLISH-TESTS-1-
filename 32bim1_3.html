@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Evaluación de Inglés - 3° Año - 1° Bimestre (C) (CABA)</title>
+  <style>
+    :root { --primary: #1e3a8a; --danger: #dc2626; --bg: #f8fafc; --card: #ffffff; }
+    * { box-sizing: border-box; user-select: none; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: #1e293b; margin: 0; padding: 0; }
+    #lock-screen, #end-screen, #penalty-overlay {
+      position: fixed; inset: 0; background: #0f172a; color: white; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; z-index: 9999; text-align: center; padding: 2rem; overflow-y: auto;
+    }
+    #end-screen, #penalty-overlay { display: none; }
+    #penalty-overlay { background: rgba(153, 27, 27, 0.98); z-index: 10000; }
+    .btn {
+      background: #2563eb; color: white; border: none; padding: 14px 28px; font-size: 1.1rem;
+      border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 1rem; touch-action: manipulation;
+    }
+    .btn:hover { background: #1d4ed8; }
+    header {
+      position: sticky; top: 0; background: var(--primary); color: white; padding: 12px 24px;
+      display: flex; justify-content: space-between; align-items: center; z-index: 100; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .timer-box { font-size: 1.4rem; font-weight: bold; background: #0f172a; padding: 6px 16px; border-radius: 6px; font-family: monospace; }
+    .warning-badge { background: var(--danger); padding: 4px 10px; border-radius: 4px; font-size: 0.9rem; font-weight: bold; }
+    main { max-width: 900px; margin: 2rem auto; padding: 0 1rem 4rem; }
+    .card { background: var(--card); border-radius: 10px; padding: 1.5rem 2rem; margin-bottom: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    h1, h2, h3 { color: var(--primary); margin-top: 0; }
+    .reading-box { background: #eff6ff; border-left: 5px solid #2563eb; padding: 1.2rem; line-height: 1.7; font-size: 1.05rem; }
+    input[type="text"], select, textarea {
+      border: 1px solid #94a3b8; border-radius: 5px; padding: 6px 10px; font-size: 0.95rem; font-family: inherit; user-select: text;
+    }
+    input[type="text"] { width: 185px; }
+    .wide-input { width: 100% !important; margin-top: 6px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; }
+    th { background: #e2e8f0; }
+    .item { margin-bottom: 14px; line-height: 1.6; }
+    .student-info { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  </style>
+</head>
+<body>
+
+<div id="lock-screen">
+  <h1>Evaluación de Inglés - 3.º Año (1.º Bimestre)</h1>
+  <p>Ciudad Autónoma de Buenos Aires | Duración: 30 minutos</p>
+  <p style="max-width: 560px; color: #cbd5e1;">
+    Esta evaluación se desarrollará en modo pantalla completa obligatorio. Abandonar la pantalla completa o cambiar de pestaña bloqueará el examen y sumará una penalización en tu informe final.
+  </p>
+  <button type="button" id="start-btn" class="btn">Comenzar Evaluación (Pantalla Completa)</button>
+</div>
+
+<div id="penalty-overlay">
+  <h1>⚠️ PENALIZACIÓN REGISTRADA</h1>
+  <p style="max-width: 520px; font-size: 1.15rem;">
+    Has salido de la pantalla completa o cambiado de ventana. Este evento quedó registrado con marca de tiempo en tu reporte final.
+  </p>
+  <p>Penalizaciones acumuladas: <strong id="overlay-strikes">1</strong></p>
+  <button type="button" id="resume-fs-btn" class="btn" style="background:#ffffff; color:#991b1b;">Volver a Pantalla Completa para Continuar</button>
+</div>
+
+<div id="end-screen">
+  <h1>Evaluación Finalizada</h1>
+  <p id="end-reason"></p>
+  <div id="summary-box" style="background:#1e293b; padding:1.5rem; border-radius:8px; margin-top:1rem; max-width:620px;"></div>
+  <button type="button" id="redownload-btn" class="btn" style="background:#16a34a;">📥 Volver a descargar reporte oficial (.txt)</button>
+</div>
+
+<header>
+  <div><strong>INGLÉS 3.º AÑO</strong> — Primer Bimestre</div>
+  <div class="warning-badge">Penalizaciones: <span id="strike-count">0</span></div>
+  <div class="timer-box" id="timer">30:00</div>
+</header>
+
+<main id="exam-form">
+  <div class="card student-info">
+    <div><label><strong>Apellido y Nombre:</strong><br><input type="text" id="student-name" class="wide-input" placeholder="Ej: Giménez, Lautaro"></label></div>
+    <div><label><strong>Curso y División:</strong><br><input type="text" id="student-course" class="wide-input" placeholder="Ej: 3° B"></label></div>
+  </div>
+
+  <!-- READING -->
+  <div class="card">
+    <h2>Section 1: Reading Comprehension</h2>
+    <p><em>Read the text carefully and complete the activities below.</em></p>
+    <div class="reading-box">
+      <p>Santino Morales is fifteen years old and he comes from Bariloche, although he now lives in the neighbourhood of Villa Urquiza, in Buenos Aires. Every morning, he rides his bike ten minutes to his bilingual secondary school. Santino is a very curious and reliable student. He loves astronomy and chess, and he prefers reading science magazines to playing video games. In his spare time, he builds telescope models and can speak German quite well, though he doesn't enjoy swimming in cold water.</p>
+      <p>Last Thursday was a memorable evening for Santino and his school astronomy club. At eight o'clock, they visited the Planetario Galileo Galilei in Palermo with their Physics teacher. They watched a projection about the Milky Way and observed Saturn through powerful telescopes on the terrace. During the activity, Santino took detailed notes and asked the astronomer three questions about black holes.</p>
+      <p>After the observation session, the group didn't take the train back immediately; instead, they drank hot chocolate near the lake in Bosques de Palermo. Unfortunately, Santino forgot his umbrella on a bench when it started to drizzle, so he arrived home at half past eleven completely wet, yet thrilled by the experience.</p>
+    </div>
+
+    <h3>1A. True or False? Select T or F and JUSTIFY your answers using information from the text.</h3>
+    <div class="item">
+      1. Santino goes to school by train every morning. <select data-q="1A.1 (T/F)"><option value="">--</option><option>T</option><option>F</option></select><br>
+      Justification: <input type="text" class="wide-input" data-q="1A.1 Justification">
+    </div>
+    <div class="item">
+      2. Santino prefers playing video games rather than reading science magazines. <select data-q="1A.2 (T/F)"><option value="">--</option><option>T</option><option>F</option></select><br>
+      Justification: <input type="text" class="wide-input" data-q="1A.2 Justification">
+    </div>
+    <div class="item">
+      3. The astronomy club observed Saturn from the terrace of the Planetario. <select data-q="1A.3 (T/F)"><option value="">--</option><option>T</option><option>F</option></select><br>
+      Justification: <input type="text" class="wide-input" data-q="1A.3 Justification">
+    </div>
+    <div class="item">
+      4. Santino arrived home completely dry at half past eleven. <select data-q="1A.4 (T/F)"><option value="">--</option><option>T</option><option>F</option></select><br>
+      Justification: <input type="text" class="wide-input" data-q="1A.4 Justification">
+    </div>
+  </div>
+
+  <!-- PRESENTATIONS -->
+  <div class="card">
+    <h2>Section 2: Personal Introductions (1st & 3rd Person Singular)</h2>
+    <p><strong>2A. Complete Santino's introduction in the FIRST PERSON ("I") based on the text.</strong></p>
+    <div class="item">
+      Hello! My name (1) <input type="text" data-q="2A (1)"> Santino Morales and I (2) <input type="text" data-q="2A (2)"> fifteen years old. I (3) <input type="text" data-q="2A (3)"> from Bariloche, but I (4) <input type="text" data-q="2A (4)"> in Villa Urquiza now. In my free time, I (5) <input type="text" data-q="2A (5)"> telescope models and I can (6) <input type="text" data-q="2A (6)"> German!
+    </div>
+    <p><strong>2B. Write a short paragraph (50–60 words) introducing a friend or family member in the THIRD PERSON SINGULAR (include: name, age, origin, place where they live, likes/preferences, hobbies, and abilities).</strong></p>
+    <textarea rows="5" class="wide-input" data-q="2B (3rd Person Paragraph)" placeholder="Write your paragraph here..."></textarea>
+  </div>
+
+  <!-- VOCABULARY & WORD DERIVATIVES -->
+  <div class="card">
+    <h2>Section 3: Vocabulary & Word Derivatives</h2>
+    <p><strong>3A. Matching: Match the words from the text (1–5) with their definitions (A–E).</strong></p>
+    <table>
+      <tr><th>Word</th><th>Match (Letter)</th><th>Definitions</th></tr>
+      <tr><td>1. Reliable</td><td><input type="text" style="width:60px" data-q="3A.1 (Reliable)"></td><td>A. Very excited and pleased.</td></tr>
+      <tr><td>2. Detailed</td><td><input type="text" style="width:60px" data-q="3A.2 (Detailed)"></td><td>B. Light rain falling in very fine drops.</td></tr>
+      <tr><td>3. Drizzle</td><td><input type="text" style="width:60px" data-q="3A.3 (Drizzle)"></td><td>C. Someone or something you can trust and depend on.</td></tr>
+      <tr><td>4. Thrilled</td><td><input type="text" style="width:60px" data-q="3A.4 (Thrilled)"></td><td>D. A long seat for two or more people in a park or street.</td></tr>
+      <tr><td>5. Bench</td><td><input type="text" style="width:60px" data-q="3A.5 (Bench)"></td><td>E. Including many small facts or pieces of information.</td></tr>
+    </table>
+
+    <p style="margin-top:1.5rem;"><strong>3B. Word Families (Derivatives): Complete the chart and then fill in the gaps with the correct form.</strong></p>
+    <table>
+      <tr><th>Verb</th><th>Noun</th><th>Adjective</th></tr>
+      <tr><td>rely</td><td>reliability</td><td>(1) <input type="text" data-q="3B Chart (1)"></td></tr>
+      <tr><td>(2) <input type="text" data-q="3B Chart (2)"></td><td>observation</td><td>observant</td></tr>
+      <tr><td>thrill</td><td>(3) <input type="text" data-q="3B Chart (3)"></td><td>thrilled / thrilling</td></tr>
+      <tr><td>memorize</td><td>memory</td><td>(4) <input type="text" data-q="3B Chart (4)"></td></tr>
+    </table>
+    <div class="item" style="margin-top:1rem;">
+      a) Santino is a very <input type="text" data-q="3B (a)"> (RELY) friend; he always keeps his promises.<br>
+      b) The <input type="text" data-q="3B (b)"> (OBSERVE) of the planets through a telescope is fascinating.<br>
+      c) Visiting the Planetario at night was a <input type="text" data-q="3B (c)"> (MEMORY) experience.
+    </div>
+  </div>
+
+  <!-- GRAMMAR -->
+  <div class="card">
+    <h2>Section 4: Grammar in Context (To Be, Present Simple & Past Simple)</h2>
+    <p><strong>4A. Fill in the gaps with the correct form of the verbs in brackets (Present Simple, Past Simple, or Verb To Be).</strong></p>
+    <div class="item">
+      1. Last Thursday, the sky <input type="text" data-q="4A.1 (a)"> (be) clear at first, so the students <input type="text" data-q="4A.1 (b)"> (see) Saturn clearly.<br>
+      2. <input type="text" data-q="4A.2 (a)"> Santino <input type="text" data-q="4A.2 (b)"> (go) to school by bike every day? Yes, he does.<br>
+      3. Yesterday evening, I <input type="text" data-q="4A.3 (a)"> (forget) my keys at school, so I <input type="text" data-q="4A.3 (b)"> (not / open) the door.<br>
+      4. My grandparents <input type="text" data-q="4A.4 (a)"> (not / be) in Buenos Aires right now; they <input type="text" data-q="4A.4 (b)"> (live) in Bariloche.<br>
+      5. Where <input type="text" data-q="4A.5"> (be) you and your friends at 9 p.m. last night?
+    </div>
+
+    <p><strong>4B. Question Building: Write the appropriate Yes/No or Wh- question for each underlined answer.</strong></p>
+    <div class="item">
+      1. <input type="text" class="wide-input" data-q="4B.1 (Question)" placeholder="Question..."><br>
+      Answer: Santino lives <u>in Villa Urquiza</u>.
+    </div>
+    <div class="item">
+      2. <input type="text" class="wide-input" data-q="4B.2 (Question)" placeholder="Question..."><br>
+      Answer: Yes, <u>they visited the Planetario</u> last Thursday.
+    </div>
+    <div class="item">
+      3. <input type="text" class="wide-input" data-q="4B.3 (Question)" placeholder="Question..."><br>
+      Answer: He forgot his umbrella <u>on a bench</u>.
+    </div>
+    <div class="item">
+      4. <input type="text" class="wide-input" data-q="4B.4 (Question)" placeholder="Question..."><br>
+      Answer: No, <u>he isn't</u> sixteen years old.
+    </div>
+
+    <p><strong>4C. Put the words in order to make grammatically correct sentences or questions.</strong></p>
+    <div class="item">
+      1. rides / school / Santino / always / his / to / bike / .<br>
+      <input type="text" class="wide-input" data-q="4C.1">
+    </div>
+    <div class="item">
+      2. did / astronomer / ask / questions / he / how many / the / ?<br>
+      <input type="text" class="wide-input" data-q="4C.2">
+    </div>
+    <div class="item">
+      3. umbrella / bench / forgot / his / Santino / on / a / .<br>
+      <input type="text" class="wide-input" data-q="4C.3">
+    </div>
+    <div class="item">
+      4. swimming / doesn't / water / enjoy / cold / in / he / .<br>
+      <input type="text" class="wide-input" data-q="4C.4">
+    </div>
+  </div>
+
+  <div style="text-align: center;">
+    <button type="button" id="finish-btn" class="btn" style="background:#16a34a;">Finalizar y Entregar Evaluación</button>
+  </div>
+</main>
+
+<script>
+  let timeLeft = 30 * 60; // 30 minutos
+  let strikes = 0;
+  let examActive = false;
+  let securityArmed = false;
+  let timerInterval;
+  let startTimeStr = "";
+  let savedReportText = "";
+  let savedFilename = "Evaluacion_1Bim_C.txt";
+
+  const ANSWER_KEY = {
+    "1A.1 (T/F)": { type: "auto", valid: ["f", "false"], display: "F" },
+    "1A.1 Justification": { type: "manual", display: "He rides his bike ten minutes to school every morning (not by train)." },
+    "1A.2 (T/F)": { type: "auto", valid: ["f", "false"], display: "F" },
+    "1A.2 Justification": { type: "manual", display: "He prefers reading science magazines to playing video games." },
+    "1A.3 (T/F)": { type: "auto", valid: ["t", "true"], display: "T" },
+    "1A.3 Justification": { type: "manual", display: "They observed Saturn through powerful telescopes on the terrace." },
+    "1A.4 (T/F)": { type: "auto", valid: ["f", "false"], display: "F" },
+    "1A.4 Justification": { type: "manual", display: "He forgot his umbrella when it drizzled and arrived home completely wet." },
+    "2A (1)": { type: "auto", valid: ["is", "'s"], display: "is" },
+    "2A (2)": { type: "auto", valid: ["am", "'m"], display: "am" },
+    "2A (3)": { type: "auto", valid: ["am", "'m", "come"], display: "am / come" },
+    "2A (4)": { type: "auto", valid: ["live"], display: "live" },
+    "2A (5)": { type: "auto", valid: ["build", "make"], display: "build" },
+    "2A (6)": { type: "auto", valid: ["speak"], display: "speak" },
+    "2B (3rd Person Paragraph)": { type: "manual", display: "Check 3rd person -s (lives, likes, prefers, plays), is, can + inf., and 7 details." },
+    "3A.1 (Reliable)": { type: "auto", valid: ["c"], display: "C" },
+    "3A.2 (Detailed)": { type: "auto", valid: ["e"], display: "E" },
+    "3A.3 (Drizzle)": { type: "auto", valid: ["b"], display: "B" },
+    "3A.4 (Thrilled)": { type: "auto", valid: ["a"], display: "A" },
+    "3A.5 (Bench)": { type: "auto", valid: ["d"], display: "D" },
+    "3B Chart (1)": { type: "auto", valid: ["reliable"], display: "reliable" },
+    "3B Chart (2)": { type: "auto", valid: ["observe"], display: "observe" },
+    "3B Chart (3)": { type: "auto", valid: ["thrill"], display: "thrill" },
+    "3B Chart (4)": { type: "auto", valid: ["memorable"], display: "memorable" },
+    "3B (a)": { type: "auto", valid: ["reliable"], display: "reliable" },
+    "3B (b)": { type: "auto", valid: ["observation"], display: "observation" },
+    "3B (c)": { type: "auto", valid: ["memorable"], display: "memorable" },
+    "4A.1 (a)": { type: "auto", valid: ["was"], display: "was" },
+    "4A.1 (b)": { type: "auto", valid: ["saw"], display: "saw" },
+    "4A.2 (a)": { type: "auto", valid: ["does"], display: "Does" },
+    "4A.2 (b)": { type: "auto", valid: ["go"], display: "go" },
+    "4A.3 (a)": { type: "auto", valid: ["forgot"], display: "forgot" },
+    "4A.3 (b)": { type: "auto", valid: ["didn't open", "did not open"], display: "didn't open" },
+    "4A.4 (a)": { type: "auto", valid: ["aren't", "are not", "'re not"], display: "aren't" },
+    "4A.4 (b)": { type: "auto", valid: ["live"], display: "live" },
+    "4A.5": { type: "auto", valid: ["were"], display: "were" },
+    "4B.1 (Question)": { type: "auto", valid: ["where does santino live"], display: "Where does Santino live?" },
+    "4B.2 (Question)": { type: "auto", valid: ["did they visit the planetario last thursday", "did they visit the planetario"], display: "Did they visit the Planetario last Thursday?" },
+    "4B.3 (Question)": { type: "auto", valid: ["where did he forget his umbrella", "where did santino forget his umbrella"], display: "Where did he forget his umbrella?" },
+    "4B.4 (Question)": { type: "auto", valid: ["is he sixteen years old", "is santino sixteen years old"], display: "Is he sixteen years old?" },
+    "4C.1": { type: "auto", valid: ["santino always rides his bike to school"], display: "Santino always rides his bike to school." },
+    "4C.2": { type: "auto", valid: ["how many questions did he ask the astronomer"], display: "How many questions did he ask the astronomer?" },
+    "4C.3": { type: "auto", valid: ["santino forgot his umbrella on a bench"], display: "Santino forgot his umbrella on a bench." },
+    "4C.4": { type: "auto", valid: ["he doesn't enjoy swimming in cold water", "he does not enjoy swimming in cold water"], display: "He doesn't enjoy swimming in cold water." }
+  };
+
+  function normalizeText(str) {
+    return str.toLowerCase().replace(/[’‘]/g, "'").replace(/[.?!,;]+$/g, "").replace(/\s+/g, " ").trim();
+  }
+
+  function enterFullscreenSafe() {
+    try {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        const p = elem.requestFullscreen();
+        if (p && p.catch) p.catch(() => {});
+      } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+      }
+    } catch (e) {}
+  }
+
+  function startExam() {
+    startTimeStr = new Date().toLocaleString('es-AR');
+    document.getElementById('lock-screen').style.display = 'none';
+    examActive = true;
+    timerInterval = setInterval(updateTimer, 1000);
+    enterFullscreenSafe();
+    setTimeout(() => { securityArmed = true; }, 1500);
+  }
+
+  document.getElementById('start-btn').addEventListener('click', startExam);
+  document.getElementById('resume-fs-btn').addEventListener('click', () => {
+    enterFullscreenSafe();
+    document.getElementById('penalty-overlay').style.display = 'none';
+  });
+  document.getElementById('finish-btn').addEventListener('click', () => finishExam('Submitted by student.'));
+  document.getElementById('redownload-btn').addEventListener('click', downloadAnswers);
+
+  function updateTimer() {
+    if (!examActive) return;
+    timeLeft--;
+    const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+    const secs = (timeLeft % 60).toString().padStart(2, '0');
+    document.getElementById('timer').textContent = `${mins}:${secs}`;
+    if (timeLeft <= 300) document.getElementById('timer').style.color = '#f87171';
+    if (timeLeft <= 0) finishExam('Time limit (30 minutes) expired.');
+  }
+
+  function triggerStrike() {
+    if (!examActive || !securityArmed) return;
+    strikes++;
+    document.getElementById('strike-count').textContent = strikes;
+    document.getElementById('overlay-strikes').textContent = strikes;
+    document.getElementById('penalty-overlay').style.display = 'flex';
+  }
+
+  document.addEventListener('visibilitychange', () => { if (document.hidden) triggerStrike(); });
+  window.addEventListener('blur', () => { triggerStrike(); });
+  document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) triggerStrike(); });
+
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('copy', e => e.preventDefault());
+  document.addEventListener('paste', e => e.preventDefault());
+  document.addEventListener('keydown', e => {
+    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key.toUpperCase())) || (e.ctrlKey && ['U','C','V'].includes(e.key.toUpperCase()))) {
+      e.preventDefault();
+    }
+  });
+
+  function computeChecksum(text) {
+    let hash = 0;
+    for (let i = 0; i < text.length; i++) {
+      hash = ((hash << 5) - hash) + text.charCodeAt(i);
+      hash |= 0;
+    }
+    return "VER-" + Math.abs(hash).toString(16).toUpperCase().padStart(8, '0');
+  }
+
+  function buildReport(reason) {
+    const name = document.getElementById('student-name').value.trim() || 'Sin_nombre';
+    const course = document.getElementById('student-course').value.trim() || 'Sin_curso';
+    const endTimeStr = new Date().toLocaleString('es-AR');
+    const cleanName = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "_");
+    savedFilename = `Entrega_1Bim_C_${cleanName}.txt`;
+
+    let autoCorrect = 0;
+    let autoTotal = 0;
+    let answerLines = [];
+
+    document.querySelectorAll('[data-q]').forEach(el => {
+      const qLabel = el.getAttribute('data-q');
+      const rawVal = el.value.trim();
+      const keyObj = ANSWER_KEY[qLabel];
+
+      if (keyObj && keyObj.type === "auto") {
+        autoTotal++;
+        if (!rawVal) {
+          answerLines.push(`[${qLabel}]: (Blank)  --->  ❌ NOT COMPLETED (Correct answer: ${keyObj.display})`);
+        } else {
+          const normUser = normalizeText(rawVal);
+          const isRight = keyObj.valid.some(v => normalizeText(v) === normUser);
+          if (isRight) {
+            autoCorrect++;
+            answerLines.push(`[${qLabel}]: ${rawVal}  --->  ✅ CORRECT`);
+          } else {
+            answerLines.push(`[${qLabel}]: ${rawVal}  --->  ❌ INCORRECT (Correct answer: ${keyObj.display})`);
+          }
+        }
+      } else if (keyObj && keyObj.type === "manual") {
+        const displayVal = rawVal || "❌ NOT COMPLETED";
+        answerLines.push(`[${qLabel}]: ${displayVal}\n    ---> 📝 MANUAL GRADING [ ___ / 6 pts ] | Model answer: ${keyObj.display}`);
+      }
+    });
+
+    const percentage = autoTotal > 0 ? ((autoCorrect / autoTotal) * 100).toFixed(1) : "0.0";
+    const autoScore = ((autoCorrect / autoTotal) * 70).toFixed(1);
+
+    let headerLines = [
+      "================================================================================",
+      "OFFICIAL EXAM REPORT - ENGLISH 3rd YEAR (1st TERM - VERSION C - CABA)",
+      "================================================================================",
+      `Student Name       : ${name}`,
+      `Class / Division   : ${course}`,
+      `Start Time         : ${startTimeStr}`,
+      `Finish Time        : ${endTimeStr}`,
+      `Time Remaining     : ${document.getElementById('timer').textContent}`,
+      `Submission Reason  : ${reason}`,
+      `Fullscreen Exit Penalties: ${strikes}`,
+      "--------------------------------------------------------------------------------",
+      "GRADING SUMMARY (TOTAL SCALE: 100 POINTS)",
+      `1. Auto-graded Section (70 pts max) : ${autoCorrect} / ${autoTotal} items (${percentage}%) = ${autoScore} / 70 pts`,
+      `2. Open Writing & Justifications (30 pts max): [ _____ / 30 pts ] (Teacher's score)`,
+      `3. FINAL GRADE (1 + 2)              : [ _____ / 100 pts ]`,
+      "================================================================================\n",
+      "DETAILED ANSWERS:\n"
+    ];
+
+    const bodyText = headerLines.concat(answerLines).join("\n");
+    const checksum = computeChecksum(bodyText);
+    savedReportText = bodyText + `\n\n================================================================================\nREAD-ONLY INTEGRITY SEAL: ${checksum} | DO NOT MODIFY THIS FILE\n================================================================================`;
+  }
+
+  function downloadAnswers() {
+    const blob = new Blob([savedReportText], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = savedFilename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function finishExam(reason) {
+    examActive = false;
+    securityArmed = false;
+    clearInterval(timerInterval);
+    document.getElementById('penalty-overlay').style.display = 'none';
+    buildReport(reason);
+    downloadAnswers();
+
+    const name = document.getElementById('student-name').value || 'Sin nombre';
+    const course = document.getElementById('student-course').value || 'Sin curso';
+    document.querySelectorAll('input, select, textarea').forEach(el => el.disabled = true);
+    document.getElementById('end-reason').textContent = reason;
+    document.getElementById('summary-box').innerHTML = `
+      <p><strong>Alumno:</strong> ${name} | <strong>Curso:</strong> ${course}</p>
+      <p><strong>Inicio:</strong> ${startTimeStr} | <strong>Fin:</strong> ${new Date().toLocaleString('es-AR')}</p>
+      <p><strong>Penalizaciones por salida de pantalla:</strong> ${strikes}</p>
+      <p style="color:#4ade80; font-weight:bold;">✅ Reporte "${savedFilename}" generado y descargado. Adjúntalo en Classroom sin modificarlo.</p>
+    `;
+    document.getElementById('end-screen').style.display = 'flex';
+  }
+</script>
+</body>
+</html>

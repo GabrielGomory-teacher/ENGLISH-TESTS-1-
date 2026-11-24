@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Evaluación de Inglés - 3° Año - 2° Bimestre (C) (CABA)</title>
+  <style>
+    :root { --primary: #0f766e; --danger: #dc2626; --bg: #f0fdfa; --card: #ffffff; }
+    * { box-sizing: border-box; user-select: none; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: #1e293b; margin: 0; padding: 0; }
+    #lock-screen, #end-screen, #penalty-overlay {
+      position: fixed; inset: 0; background: #042f2e; color: white; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; z-index: 9999; text-align: center; padding: 2rem; overflow-y: auto;
+    }
+    #end-screen, #penalty-overlay { display: none; }
+    #penalty-overlay { background: rgba(153, 27, 27, 0.98); z-index: 10000; }
+    .btn {
+      background: #0d9488; color: white; border: none; padding: 14px 28px; font-size: 1.1rem;
+      border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 1rem; touch-action: manipulation;
+    }
+    .btn:hover { background: #0f766e; }
+    header {
+      position: sticky; top: 0; background: var(--primary); color: white; padding: 12px 24px;
+      display: flex; justify-content: space-between; align-items: center; z-index: 100; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .timer-box { font-size: 1.4rem; font-weight: bold; background: #042f2e; padding: 6px 16px; border-radius: 6px; font-family: monospace; }
+    .warning-badge { background: var(--danger); padding: 4px 10px; border-radius: 4px; font-size: 0.9rem; font-weight: bold; }
+    main { max-width: 900px; margin: 2rem auto; padding: 0 1rem 4rem; }
+    .card { background: var(--card); border-radius: 10px; padding: 1.5rem 2rem; margin-bottom: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    h1, h2, h3 { color: var(--primary); margin-top: 0; }
+    .reading-box { background: #ccfbf1; border-left: 5px solid #0d9488; padding: 1.2rem; line-height: 1.7; font-size: 1.05rem; }
+    input[type="text"], select, textarea {
+      border: 1px solid #94a3b8; border-radius: 5px; padding: 6px 10px; font-size: 0.95rem; font-family: inherit; user-select: text;
+    }
+    input[type="text"] { width: 185px; }
+    .wide-input { width: 100% !important; margin-top: 6px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; }
+    th { background: #e2e8f0; }
+    .item { margin-bottom: 14px; line-height: 1.6; }
+    .student-info { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  </style>
+</head>
+<body>
+
+<div id="lock-screen">
+  <h1>Evaluación de Inglés - 3.º Año (2.º Bimestre)</h1>
+  <p>Ciudad Autónoma de Buenos Aires | Duración: 30 minutos</p>
+  <p style="max-width: 560px; color: #ccfbf1;">
+    Esta evaluación se desarrollará en modo pantalla completa obligatorio. Abandonar la pantalla completa o cambiar de pestaña bloqueará el examen y sumará una penalización en tu informe final.
+  </p>
+  <button type="button" id="start-btn" class="btn">Comenzar Evaluación (Pantalla Completa)</button>
+</div>
+
+<div id="penalty-overlay">
+  <h1>⚠️ PENALIZACIÓN REGISTRADA</h1>
+  <p style="max-width: 520px; font-size: 1.15rem;">
+    Has salido de la pantalla completa o cambiado de ventana. Este evento quedó registrado con marca de tiempo en tu reporte final.
+  </p>
+  <p>Penalizaciones acumuladas: <strong id="overlay-strikes">1</strong></p>
+  <button type="button" id="resume-fs-btn" class="btn" style="background:#ffffff; color:#991b1b;">Volver a Pantalla Completa para Continuar</button>
+</div>
+
+<div id="end-screen">
+  <h1>Evaluación Finalizada</h1>
+  <p id="end-reason"></p>
+  <div id="summary-box" style="background:#115e59; padding:1.5rem; border-radius:8px; margin-top:1rem; max-width:620px;"></div>
+  <button type="button" id="redownload-btn" class="btn" style="background:#059669;">📥 Volver a descargar reporte oficial (.txt)</button>
+</div>
+
+<header>
+  <div><strong>INGLÉS 3.º AÑO</strong> — Segundo Bimestre</div>
+  <div class="warning-badge">Penalizaciones: <span id="strike-count">0</span></div>
+  <div class="timer-box" id="timer">30:00</div>
+</header>
+
+<main>
+  <div class="card student-info">
+    <div><label><strong>Apellido y Nombre:</strong><br><input type="text" id="student-name" class="wide-input" placeholder="Ej: Paz, Abril"></label></div>
+    <div><label><strong>Curso y División:</strong><br><input type="text" id="student-course" class="wide-input" placeholder="Ej: 3° A"></label></div>
+  </div>
+
+  <!-- READING -->
+  <div class="card">
+    <h2>Section 1: Reading Comprehension</h2>
+    <p><em>Read the text carefully and complete the activities below.</em></p>
+    <div class="reading-box">
+      <p>Abril Paz is sixteen years old. She comes from Neuquén, though she currently lives in Boedo, Buenos Aires, with her aunt and uncle. Abril is an enthusiastic young podcaster and book reviewer. She prefers listening to independent audiobooks to watching commercial television because audiobooks are more portable, quieter, and more imaginative than TV shows. In her free time, she edits audio tracks and can speak Portuguese fluently.</p>
+      <p>Last month, Abril recorded a special podcast episode about young Argentine writers at a community radio station in San Cristóbal. Last Tuesday, she interviewed a famous comic artist from Buenos Aires. The episode went viral among secondary students and reached five thousand downloads in two days.</p>
+      <p>Next Friday, Abril and her co-host are interviewing a science-fiction author live at the Feria del Libro—they already received their press passes and confirmed the time slot. She is also going to launch a second podcast season in November. Look at the microphone battery indicator right now: it is flashing red! The recorder is going to turn off in a minute, so Abril promises she will charge all the batteries tonight.</p>
+    </div>
+
+    <h3>1A. Multiple Choice & True/False: Choose the correct option and JUSTIFY your answer with evidence from the text.</h3>
+    <div class="item">
+      1. According to Abril, independent audiobooks are _______ commercial television.<br>
+      <select data-q="1A.1 (Option)"><option value="">Select...</option><option>A) louder than</option><option>B) more portable and imaginative than</option><option>C) as boring as</option></select><br>
+      Justification: <input type="text" class="wide-input" data-q="1A.1 Justification">
+    </div>
+    <div class="item">
+      2. Abril's live interview at the Feria del Libro next Friday is a confirmed arrangement. <select data-q="1A.2 (T/F)"><option value="">--</option><option>True</option><option>False</option></select><br>
+      Justification: <input type="text" class="wide-input" data-q="1A.2 Justification">
+    </div>
+    <div class="item">
+      3. Why does Abril think the recorder is going to turn off soon?<br>
+      <select data-q="1A.3 (Option)"><option value="">Select...</option><option>A) The microphone battery indicator is flashing red.</option><option>B) She accidentally pressed the stop button.</option><option>C) The studio always closes at six o'clock.</option></select><br>
+      Justification: <input type="text" class="wide-input" data-q="1A.3 Justification">
+    </div>
+  </div>
+
+  <!-- PRESENTATIONS -->
+  <div class="card">
+    <h2>Section 2: Introductions (1st & 3rd Person Singular)</h2>
+    <p><strong>2A. Complete the text about Abril (3rd Person) and then rewrite it as if YOU were Abril (1st Person).</strong></p>
+    <div class="item">
+      <em>3rd Person:</em> Her name is Abril Paz. She (1) <input type="text" data-q="2A (1)"> sixteen years old and she comes (2) <input type="text" data-q="2A (2)"> Neuquén, but she (3) <input type="text" data-q="2A (3)"> in Boedo. She (4) <input type="text" data-q="2A (4)"> listening to audiobooks to watching TV, and her main hobby is editing audio tracks.
+    </div>
+    <div class="item">
+      <em>1st Person (Imagine you are Abril — write 45–55 words including name, age, origin, residence, likes/preferences, hobbies, and abilities):</em><br>
+      <textarea rows="4" class="wide-input" data-q="2B (1st Person Paragraph)" placeholder="Hi! My name is Abril..."></textarea>
+    </div>
+  </div>
+
+  <!-- VOCABULARY & WORD DERIVATIVES -->
+  <div class="card">
+    <h2>Section 3: Vocabulary & Word Derivatives</h2>
+    <p><strong>3A. Matching: Match the words/phrases (1–5) with their meanings (A–E).</strong></p>
+    <table>
+      <tr><th>Term</th><th>Letter</th><th>Meaning</th></tr>
+      <tr><td>1. Portable</td><td><input type="text" style="width:60px" data-q="3A.1 (Portable)"></td><td>A. A specific period of time allocated in a schedule.</td></tr>
+      <tr><td>2. Viral</td><td><input type="text" style="width:60px" data-q="3A.2 (Viral)"></td><td>B. Shining or blinking on and off quickly.</td></tr>
+      <tr><td>3. Time slot</td><td><input type="text" style="width:60px" data-q="3A.3 (Time slot)"></td><td>C. Light and easy to carry or move around.</td></tr>
+      <tr><td>4. Flashing</td><td><input type="text" style="width:60px" data-q="3A.4 (Flashing)"></td><td>D. To supply electrical power to a battery or device.</td></tr>
+      <tr><td>5. Charge</td><td><input type="text" style="width:60px" data-q="3A.5 (Charge)"></td><td>E. Spreading very quickly across the internet.</td></tr>
+    </table>
+
+    <p style="margin-top:1.5rem;"><strong>3B. Word Derivatives: Complete the sentences using the correct derivative (Noun, Adjective, or Verb) of the word in capitals.</strong></p>
+    <div class="item">
+      1. Abril spoke with great <input type="text" data-q="3B.1 (ENTHUSIASTIC)"> during the live radio show. (<strong>ENTHUSIASTIC</strong> - Noun)<br>
+      2. A library is much <input type="text" data-q="3B.2 (QUIET)"> than a busy café. (<strong>QUIET</strong> - Comparative Adjective)<br>
+      3. Sound engineers <input type="text" data-q="3B.3 (EDITION)"> every podcast before publishing it. (<strong>EDITION</strong> - Verb)<br>
+      4. Audiobooks are very <input type="text" data-q="3B.4 (ENTERTAIN)"> during long bus trips. (<strong>ENTERTAIN</strong> - Adjective)
+    </div>
+  </div>
+
+  <!-- GRAMMAR -->
+  <div class="card">
+    <h2>Section 4: Grammar (Past Simple, Comparatives, Future Forms & Questions)</h2>
+    <p><strong>4A. Comparatives: Complete the sentences using <em>-er than</em>, <em>more ... than</em>, or <em>as ... as</em>.</strong></p>
+    <div class="item">
+      1. Recording at home is <input type="text" data-q="4A.1"> (cheap) renting a professional studio.<br>
+      2. The Feria del Libro is <input type="text" data-q="4A.2"> (crowded) a neighbourhood bookshop.<br>
+      3. Commercial TV isn't <input type="text" data-q="4A.3"> (creative) independent podcasts.<br>
+      4. Editing video is <input type="text" data-q="4A.4"> (complicated) editing short audio files.
+    </div>
+
+    <p><strong>4B. Future Forms & Past Simple: Fill in the gaps with the best form (Past Simple, <em>will</em>, <em>be going to</em>, or <em>Present Continuous</em>).</strong></p>
+    <div class="item">
+      1. Last Tuesday, Abril <input type="text" data-q="4B.1"> (interview) a famous comic artist.<br>
+      2. "I can't hear the audio!" — "Wait a second, I <input type="text" data-q="4B.2"> (turn) up the volume." <em>(spontaneous decision)</em><br>
+      3. Look at those dark clouds over Boedo! It <input type="text" data-q="4B.3"> (rain) soon! <em>(prediction based on evidence)</em><br>
+      4. We <input type="text" data-q="4B.4"> (meet) the author at the Feria del Libro tomorrow at 4 p.m.; we have our passes. <em>(arrangement)</em><br>
+      5. I promise I <input type="text" data-q="4B.5"> (not / forget) to send you the link to the episode. <em>(promise)</em><br>
+      6. Next year, Lucas <input type="text" data-q="4B.6"> (study) sound engineering; that is his plan. <em>(intention)</em>
+    </div>
+
+    <p><strong>4C. Question Building: Write the correct question for each answer.</strong></p>
+    <div class="item">
+      1. <input type="text" class="wide-input" data-q="4C.1 (Question)"><br>
+      Answer: Abril recorded the special episode <u>last month</u>.
+    </div>
+    <div class="item">
+      2. <input type="text" class="wide-input" data-q="4C.2 (Question)"><br>
+      Answer: Yes, <u>she is going to launch a second season</u> in November.
+    </div>
+    <div class="item">
+      3. <input type="text" class="wide-input" data-q="4C.3 (Question)"><br>
+      Answer: They are interviewing the author <u>at the Feria del Libro</u> next Friday.
+    </div>
+
+    <p><strong>4D. Put the words in order to form correct sentences.</strong></p>
+    <div class="item">
+      1. than / are / shows / audiobooks / portable / TV / more / .<br>
+      <input type="text" class="wide-input" data-q="4D.1">
+    </div>
+    <div class="item">
+      2. going / off / look / battery / the / is / recorder / to / turn / ; / !<br>
+      <input type="text" class="wide-input" data-q="4D.2">
+    </div>
+    <div class="item">
+      3. did / downloads / how many / episode / reach / the / ?<br>
+      <input type="text" class="wide-input" data-q="4D.3">
+    </div>
+  </div>
+
+  <div style="text-align: center;">
+    <button type="button" id="finish-btn" class="btn" style="background:#059669;">Finalizar y Entregar Evaluación</button>
+  </div>
+</main>
+
+<script>
+  let timeLeft = 30 * 60; // 30 minutos
+  let strikes = 0;
+  let examActive = false;
+  let securityArmed = false;
+  let timerInterval;
+  let startTimeStr = "";
+  let savedReportText = "";
+  let savedFilename = "Evaluacion_2Bim_C.txt";
+
+  const ANSWER_KEY = {
+    "1A.1 (Option)": { type: "auto", valid: ["b) more portable and imaginative than", "b"], display: "B) more portable and imaginative than" },
+    "1A.1 Justification": { type: "manual", display: "Audiobooks are more portable, quieter, and more imaginative than TV shows." },
+    "1A.2 (T/F)": { type: "auto", valid: ["true", "t"], display: "True" },
+    "1A.2 Justification": { type: "manual", display: "They already received their press passes and confirmed the time slot." },
+    "1A.3 (Option)": { type: "auto", valid: ["a) the microphone battery indicator is flashing red", "a"], display: "A) The microphone battery indicator is flashing red." },
+    "1A.3 Justification": { type: "manual", display: "The microphone battery indicator is flashing red right now (prediction based on evidence)." },
+    "2A (1)": { type: "auto", valid: ["is", "'s"], display: "is" },
+    "2A (2)": { type: "auto", valid: ["from"], display: "from" },
+    "2A (3)": { type: "auto", valid: ["lives"], display: "lives" },
+    "2A (4)": { type: "auto", valid: ["prefers"], display: "prefers" },
+    "2B (1st Person Paragraph)": { type: "manual", display: "Check 1st person forms (My name is Abril, I am 16, I come from Neuquén, I live in Boedo, I prefer..., I can speak...)." },
+    "3A.1 (Portable)": { type: "auto", valid: ["c"], display: "C" },
+    "3A.2 (Viral)": { type: "auto", valid: ["e"], display: "E" },
+    "3A.3 (Time slot)": { type: "auto", valid: ["a"], display: "A" },
+    "3A.4 (Flashing)": { type: "auto", valid: ["b"], display: "B" },
+    "3A.5 (Charge)": { type: "auto", valid: ["d"], display: "D" },
+    "3B.1 (ENTHUSIASTIC)": { type: "auto", valid: ["enthusiasm"], display: "enthusiasm" },
+    "3B.2 (QUIET)": { type: "auto", valid: ["quieter"], display: "quieter" },
+    "3B.3 (EDITION)": { type: "auto", valid: ["edit"], display: "edit" },
+    "3B.4 (ENTERTAIN)": { type: "auto", valid: ["entertaining"], display: "entertaining" },
+    "4A.1": { type: "auto", valid: ["cheaper than"], display: "cheaper than" },
+    "4A.2": { type: "auto", valid: ["more crowded than"], display: "more crowded than" },
+    "4A.3": { type: "auto", valid: ["as creative as"], display: "as creative as" },
+    "4A.4": { type: "auto", valid: ["more complicated than"], display: "more complicated than" },
+    "4B.1": { type: "auto", valid: ["interviewed"], display: "interviewed" },
+    "4B.2": { type: "auto", valid: ["will turn", "'ll turn"], display: "will turn" },
+    "4B.3": { type: "auto", valid: ["is going to rain", "'s going to rain"], display: "is going to rain" },
+    "4B.4": { type: "auto", valid: ["are meeting", "'re meeting"], display: "are meeting" },
+    "4B.5": { type: "auto", valid: ["won't forget", "will not forget"], display: "won't forget" },
+    "4B.6": { type: "auto", valid: ["is going to study", "'s going to study"], display: "is going to study" },
+    "4C.1 (Question)": { type: "auto", valid: ["when did abril record the special episode"], display: "When did Abril record the special episode?" },
+    "4C.2 (Question)": { type: "auto", valid: ["is she going to launch a second season", "is abril going to launch a second season"], display: "Is she going to launch a second season in November?" },
+    "4C.3 (Question)": { type: "auto", valid: ["where are they interviewing the author next friday", "where are they interviewing the author"], display: "Where are they interviewing the author next Friday?" },
+    "4D.1": { type: "auto", valid: ["audiobooks are more portable than tv shows"], display: "Audiobooks are more portable than TV shows." },
+    "4D.2": { type: "auto", valid: ["look! the battery is going to turn off the recorder", "look; the battery is going to turn off the recorder", "look! the recorder battery is going to turn off"], display: "Look! The battery is going to turn off the recorder;" },
+    "4D.3": { type: "auto", valid: ["how many downloads did the episode reach"], display: "How many downloads did the episode reach?" }
+  };
+
+  function normalizeText(str) {
+    return str.toLowerCase().replace(/[’‘]/g, "'").replace(/[.?!,;]+$/g, "").replace(/\s+/g, " ").trim();
+  }
+
+  function enterFullscreenSafe() {
+    try {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        const p = elem.requestFullscreen();
+        if (p && p.catch) p.catch(() => {});
+      } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+      }
+    } catch (e) {}
+  }
+
+  function startExam() {
+    startTimeStr = new Date().toLocaleString('es-AR');
+    document.getElementById('lock-screen').style.display = 'none';
+    examActive = true;
+    timerInterval = setInterval(updateTimer, 1000);
+    enterFullscreenSafe();
+    setTimeout(() => { securityArmed = true; }, 1500);
+  }
+
+  document.getElementById('start-btn').addEventListener('click', startExam);
+  document.getElementById('resume-fs-btn').addEventListener('click', () => {
+    enterFullscreenSafe();
+    document.getElementById('penalty-overlay').style.display = 'none';
+  });
+  document.getElementById('finish-btn').addEventListener('click', () => finishExam('Submitted by student.'));
+  document.getElementById('redownload-btn').addEventListener('click', downloadAnswers);
+
+  function updateTimer() {
+    if (!examActive) return;
+    timeLeft--;
+    const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+    const secs = (timeLeft % 60).toString().padStart(2, '0');
+    document.getElementById('timer').textContent = `${mins}:${secs}`;
+    if (timeLeft <= 300) document.getElementById('timer').style.color = '#f87171';
+    if (timeLeft <= 0) finishExam('Time limit (30 minutes) expired.');
+  }
+
+  function triggerStrike() {
+    if (!examActive || !securityArmed) return;
+    strikes++;
+    document.getElementById('strike-count').textContent = strikes;
+    document.getElementById('overlay-strikes').textContent = strikes;
+    document.getElementById('penalty-overlay').style.display = 'flex';
+  }
+
+  document.addEventListener('visibilitychange', () => { if (document.hidden) triggerStrike(); });
+  window.addEventListener('blur', () => { triggerStrike(); });
+  document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) triggerStrike(); });
+
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('copy', e => e.preventDefault());
+  document.addEventListener('paste', e => e.preventDefault());
+  document.addEventListener('keydown', e => {
+    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key.toUpperCase())) || (e.ctrlKey && ['U','C','V'].includes(e.key.toUpperCase()))) {
+      e.preventDefault();
+    }
+  });
+
+  function computeChecksum(text) {
+    let hash = 0;
+    for (let i = 0; i < text.length; i++) {
+      hash = ((hash << 5) - hash) + text.charCodeAt(i);
+      hash |= 0;
+    }
+    return "VER-" + Math.abs(hash).toString(16).toUpperCase().padStart(8, '0');
+  }
+
+  function buildReport(reason) {
+    const name = document.getElementById('student-name').value.trim() || 'Sin_nombre';
+    const course = document.getElementById('student-course').value.trim() || 'Sin_curso';
+    const endTimeStr = new Date().toLocaleString('es-AR');
+    const cleanName = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "_");
+    savedFilename = `Entrega_2Bim_C_${cleanName}.txt`;
+
+    let autoCorrect = 0;
+    let autoTotal = 0;
+    let answerLines = [];
+
+    document.querySelectorAll('[data-q]').forEach(el => {
+      const qLabel = el.getAttribute('data-q');
+      const rawVal = el.value.trim();
+      const keyObj = ANSWER_KEY[qLabel];
+
+      if (keyObj && keyObj.type === "auto") {
+        autoTotal++;
+        if (!rawVal) {
+          answerLines.push(`[${qLabel}]: (Blank)  --->  ❌ NOT COMPLETED (Correct answer: ${keyObj.display})`);
+        } else {
+          const normUser = normalizeText(rawVal);
+          const isRight = keyObj.valid.some(v => normalizeText(v) === normUser);
+          if (isRight) {
+            autoCorrect++;
+            answerLines.push(`[${qLabel}]: ${rawVal}  --->  ✅ CORRECT`);
+          } else {
+            answerLines.push(`[${qLabel}]: ${rawVal}  --->  ❌ INCORRECT (Correct answer: ${keyObj.display})`);
+          }
+        }
+      } else if (keyObj && keyObj.type === "manual") {
+        const displayVal = rawVal || "❌ NOT COMPLETED";
+        answerLines.push(`[${qLabel}]: ${displayVal}\n    ---> 📝 MANUAL GRADING [ ___ / 7.5 pts ] | Model answer: ${keyObj.display}`);
+      }
+    });
+
+    const percentage = autoTotal > 0 ? ((autoCorrect / autoTotal) * 100).toFixed(1) : "0.0";
+    const autoScore = ((autoCorrect / autoTotal) * 70).toFixed(1);
+
+    let headerLines = [
+      "================================================================================",
+      "OFFICIAL EXAM REPORT - ENGLISH 3rd YEAR (2nd TERM - VERSION C - CABA)",
+      "================================================================================",
+      `Student Name       : ${name}`,
+      `Class / Division   : ${course}`,
+      `Start Time         : ${startTimeStr}`,
+      `Finish Time        : ${endTimeStr}`,
+      `Time Remaining     : ${document.getElementById('timer').textContent}`,
+      `Submission Reason  : ${reason}`,
+      `Fullscreen Exit Penalties: ${strikes}`,
+      "--------------------------------------------------------------------------------",
+      "GRADING SUMMARY (TOTAL SCALE: 100 POINTS)",
+      `1. Auto-graded Section (70 pts max) : ${autoCorrect} / ${autoTotal} items (${percentage}%) = ${autoScore} / 70 pts`,
+      `2. Open Writing & Justifications (30 pts max): [ _____ / 30 pts ] (Teacher's score)`,
+      `3. FINAL GRADE (1 + 2)              : [ _____ / 100 pts ]`,
+      "================================================================================\n",
+      "DETAILED ANSWERS:\n"
+    ];
+
+    const bodyText = headerLines.concat(answerLines).join("\n");
+    const checksum = computeChecksum(bodyText);
+    savedReportText = bodyText + `\n\n================================================================================\nREAD-ONLY INTEGRITY SEAL: ${checksum} | DO NOT MODIFY THIS FILE\n================================================================================`;
+  }
+
+  function downloadAnswers() {
+    const blob = new Blob([savedReportText], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = savedFilename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function finishExam(reason) {
+    examActive = false;
+    securityArmed = false;
+    clearInterval(timerInterval);
+    document.getElementById('penalty-overlay').style.display = 'none';
+    buildReport(reason);
+    downloadAnswers();
+
+    const name = document.getElementById('student-name').value || 'Sin nombre';
+    const course = document.getElementById('student-course').value || 'Sin curso';
+    document.querySelectorAll('input, select, textarea').forEach(el => el.disabled = true);
+    document.getElementById('end-reason').textContent = reason;
+    document.getElementById('summary-box').innerHTML = `
+      <p><strong>Alumno:</strong> ${name} | <strong>Curso:</strong> ${course}</p>
+      <p><strong>Inicio:</strong> ${startTimeStr} | <strong>Fin:</strong> ${new Date().toLocaleString('es-AR')}</p>
+      <p><strong>Penalizaciones por salida de pantalla:</strong> ${strikes}</p>
+      <p style="color:#4ade80; font-weight:bold;">✅ Reporte "${savedFilename}" generado y descargado. Adjúntalo en Classroom sin modificarlo.</p>
+    `;
+    document.getElementById('end-screen').style.display = 'flex';
+  }
+</script>
+</body>
+</html>
